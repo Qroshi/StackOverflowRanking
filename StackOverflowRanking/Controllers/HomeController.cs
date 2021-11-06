@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using ServiceStack.Host;
 using StackOverflowRanking.Models;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,12 @@ namespace StackOverflowRanking.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+
+        private string version = "2.3";
+
+        private int pages = 10;
+
+        private double total = 0;
 
         public HomeController(ILogger<HomeController> logger)
         {
@@ -35,18 +42,21 @@ namespace StackOverflowRanking.Controllers
 
             Tags tags= new Tags();
 
-            for (int i = 0; i < 10; i++)
+            try
             {
-                string parameter = String.Format("/2.3/tags?page={0}&pagesize=100&order=desc&sort=popular&site=stackoverflow", i + 1);
-                var response = await httpClient.GetAsync(parameter);
-                if (response.IsSuccessStatusCode)
+                for (int i = 0; i < pages; i++)
                 {
+                    string parameter = String.Format("/{0}/tags?page={1}&pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!LhRRNhD6sFb(YD9Wva1aMj", version, i + 1);
+                    var response = await httpClient.GetAsync(parameter);
+                    response.EnsureSuccessStatusCode();
                     string responseBody = await response.Content.ReadAsStringAsync();
                     tags.items.AddRange(JsonConvert.DeserializeObject<Tags>(responseBody).items);
                 }
             }
-
-            double total = 0;
+            catch (Exception e)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+            }
 
             foreach (var i in tags.items)
             {
