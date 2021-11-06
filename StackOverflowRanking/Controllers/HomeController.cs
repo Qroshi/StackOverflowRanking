@@ -25,7 +25,7 @@ namespace StackOverflowRanking.Controllers
         public async Task<IActionResult> Index()
         {
             HttpClientHandler handler = new HttpClientHandler();
-            //handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
             var httpClient = new HttpClient(handler);
             var apiUrl = ("http://api.stackexchange.com");
@@ -33,7 +33,7 @@ namespace StackOverflowRanking.Controllers
             httpClient.BaseAddress = new Uri(apiUrl);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            List<Tag>tags= new List<Tag>();
+            Tags tags= new Tags();
 
             for (int i = 0; i < 10; i++)
             {
@@ -42,23 +42,23 @@ namespace StackOverflowRanking.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
-                    tags.AddRange(JsonConvert.DeserializeObject<List<Tag>>(responseBody));             
+                    tags.items.AddRange(JsonConvert.DeserializeObject<Tags>(responseBody).items);
                 }
             }
 
             double total = 0;
 
-            foreach (var i in tags)
+            foreach (var i in tags.items)
             {
                 total += i.count;
             }
 
-            foreach (var i in tags)
+            foreach (var i in tags.items)
             {
-                i.percent = i.count / total * 100.0;
+                i.percent = Math.Round(i.count / total * 100.0,4);
             }
 
-            return View(tags);
+            return View(tags.items);
         }
 
         public IActionResult Privacy()
