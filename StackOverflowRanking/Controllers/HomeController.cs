@@ -52,7 +52,6 @@ namespace StackOverflowRanking.Controllers
             {
                 total += i.count;
             }
-            ViewBag.Total = total;
 
             foreach (var i in tags)
             {
