@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Nancy.Json;
+using Newtonsoft.Json;
 using StackOverflowRanking.Models;
 using System;
 using System.Collections.Generic;
@@ -30,13 +30,11 @@ namespace StackOverflowRanking.Controllers
             var httpClient = new HttpClient(handler);
             var apiUrl = ("http://api.stackexchange.com");
 
-            //setup HttpClient
             httpClient.BaseAddress = new Uri(apiUrl);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            Tags tags = new Tags();
+            List<Tag>tags= new List<Tag>();
 
-            //make request
             for (int i = 0; i < 10; i++)
             {
                 string parameter = String.Format("/2.3/tags?page={0}&pagesize=100&order=desc&sort=popular&site=stackoverflow", i + 1);
@@ -44,24 +42,24 @@ namespace StackOverflowRanking.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
-                    tags.items.AddRange(new JavaScriptSerializer().Deserialize<Tags>(responseBody).items);
+                    tags.AddRange(JsonConvert.DeserializeObject<List<Tag>>(responseBody));             
                 }
             }
 
             double total = 0;
 
-            foreach (var i in tags.items)
+            foreach (var i in tags)
             {
                 total += i.count;
             }
             ViewBag.Total = total;
 
-            foreach (var i in tags.items)
+            foreach (var i in tags)
             {
                 i.percent = i.count / total * 100.0;
             }
 
-            return View(tags.items);
+            return View(tags);
         }
 
         public IActionResult Privacy()
