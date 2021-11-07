@@ -9,6 +9,8 @@ namespace StackOverflowRanking.Models
     {
         public List<Tag> items { get; set; }
 
+        public double totalCount => items.Sum(x => x.count);
+
         public Tags()
         {
             this.items = new List<Tag>();

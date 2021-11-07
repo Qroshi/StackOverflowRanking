@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using ServiceStack.Host;
 using StackOverflowRanking.Models;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -20,9 +17,9 @@ namespace StackOverflowRanking.Controllers
 
         private string version = "2.3";
 
-        private int pages = 10;
+        private int numberOfElements = 1000;
 
-        private double total = 0;
+        private int pageSize = 100;
 
         public HomeController(ILogger<HomeController> logger)
         {
@@ -40,13 +37,13 @@ namespace StackOverflowRanking.Controllers
             httpClient.BaseAddress = new Uri(apiUrl);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            Tags tags= new Tags();
+            Tags tags = new Tags();
 
             try
             {
-                for (int i = 0; i < pages; i++)
+                for (int i = 0; i < numberOfElements/pageSize; i++)
                 {
-                    string parameter = String.Format("/{0}/tags?page={1}&pagesize=100&order=desc&sort=popular&site=stackoverflow&filter=!LhRRNhD6sFb(YD9Wva1aMj", version, i + 1);
+                    string parameter = $"/{version}/tags?page={i+1}&pagesize={pageSize}&order=desc&sort=popular&site=stackoverflow&filter=!LhRRNhD6sFb(YD9Wva1aMj";
                     var response = await httpClient.GetAsync(parameter);
                     response.EnsureSuccessStatusCode();
                     string responseBody = await response.Content.ReadAsStringAsync();
@@ -58,14 +55,11 @@ namespace StackOverflowRanking.Controllers
                 ModelState.AddModelError(string.Empty, e.Message);
             }
 
-            foreach (var i in tags.items)
-            {
-                total += i.count;
-            }
+            double totalCount = tags.totalCount;
 
             foreach (var i in tags.items)
             {
-                i.percent = Math.Round(i.count / total * 100.0,4);
+                i.percent = Math.Round(i.count / totalCount * 100.0,4);
             }
 
             return View(tags.items);
